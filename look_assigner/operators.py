@@ -131,7 +131,7 @@ class OBJECT_OT_custom_export_blend(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         # Check if the export_scene.blend operator is available
-        return hasattr(bpy.ops.export_scene, 'blend')
+        return 'blend' in dir(bpy.ops.export_scene)
 
     def execute(self, context):
         # Call the export_scene.blend operator
@@ -247,7 +247,7 @@ class LoadMaterialsOperator(Operator):
 
     @classmethod
     def poll(cls, context):
-        return "LookAssigner_Properties" in context.scene and "materials" in context.scene.LookAssigner_Properties.materials
+        return "LookAssigner_Properties" in context.scene and "materials" in context.scene.LookAssigner_Properties
 
     def execute(self, context):
         prefs = context.preferences.addons["look_assigner"].preferences
@@ -286,12 +286,11 @@ class LoadMaterialsOperator(Operator):
             standard_shaders = []
             
             for shader in imported_shaders:
-                geo_attr = preferences.pipeline_attribute_name
-                if geo_attr in shader:
-                    logger.debug (f'Pipeline Data {shader.name}  {shader[geo_attr]}')
+                if prefs.pipeline_attribute_name in shader:
+                    logger.debug (f'Pipeline Data {shader.name}  {shader[prefs.pipeline_attribute_name]}')
                     pipelined_shaders.append(shader)
                 else:
-                    logger.debug (f'Pipeline Data {shader.name}  No pipeline data attribute found')
+                    logger.debug (f'Pipeline Data {shader.name}  No pipeline data attribute found ({prefs.pipeline_attribute_name})')
                     standard_shaders.append(shader)
 
             # step 3 we've already filtered everything by this point, we just need to check if it needs to be forced onto the objects

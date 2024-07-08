@@ -31,7 +31,7 @@ class LookAssignerPreferences(AddonPreferences):
     task_filter: StringProperty(name="Task Filter", default="3d_look")
     ignore_filter: StringProperty(
         name="Ignore Specific Names", 
-        default="", 
+        default="Dots Stroke", 
         description="Enter the names of specific shaders you might want to omit from the search",)
     # pipeline_attribute_name is kind of a read only property
     pipeline_attribute_name: StringProperty(
@@ -49,6 +49,7 @@ class LookAssignerPreferences(AddonPreferences):
     def update_logging_level(self):
         if self.debug_mode:
             LoggerFactory.set_level(logging.DEBUG)
+            logger.debug("Debug Logger Enabled")
         else:
             LoggerFactory.set_level(logging.INFO)
 
@@ -62,7 +63,7 @@ class LookAssignerPreferences(AddonPreferences):
         row = layout.row()
         row.label(text="Published Shader File Search Paths:" , icon="MATERIAL")
         row = layout.row()
-        row.template_list("CustomPath_UL_List", "", self, "paths", self, "path_index")  
+        row.template_list("UI_UL_CustomPath_List", "", self, "paths", self, "path_index")  
         col = row.column(align=True)
         col.operator("wm.add_path_operator", icon='ADD', text="")
         col.operator("wm.remove_path_operator", icon='REMOVE', text="")
@@ -74,6 +75,8 @@ class LookAssignerPreferences(AddonPreferences):
         layout.prop(self, "task_filter", text="Task Filter")
         layout.prop(self, "ignore_filter", text="Ignore specific materials")
 
+        layout.prop(self, "debug_mode", text="Enable Debugging Mode (Check system console for extra messages)")
+
 def get(context: bpy.types.Context) -> LookAssignerPreferences:
     """Return the add-on preferences."""
     prefs = context.preferences.addons["look_assigner"].preferences
@@ -82,8 +85,15 @@ def get(context: bpy.types.Context) -> LookAssignerPreferences:
     ), "Expected LookAssignerPreferences, got %s instead" % (type(prefs))
     return prefs
 
+def get_ayon_project_path():
+    return "./"
+
 def load_paths_from_json(prefs):
-    json_path = os.path.join("D:\Test\JSON", "look_assigner_paths.json")
+    """
+    
+    """
+
+    json_path = os.path.join(get_ayon_project_path(), "look_assigner_paths.json")
     
     if not os.path.exists(json_path):
         return
@@ -146,8 +156,8 @@ def register():
     load_paths_from_json(prefs)
 
 def unregister():
-    bpy.utils.unregister_class(BlendFilePathItem)
     bpy.utils.unregister_class(LookAssignerPreferences)
+    bpy.utils.unregister_class(BlendFilePathItem)
     bpy.utils.unregister_class(AddPathOperator)
     bpy.utils.unregister_class(RemovePathOperator)
 

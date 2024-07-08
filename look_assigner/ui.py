@@ -7,7 +7,7 @@ from . import preferences
 from .utils import LoggerFactory
 logger = LoggerFactory.get_logger()
 
-class CustomPath_UL_List(UIList):
+class UI_UL_CustomPath_List(UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         split = layout.split(factor=0.25)
         icon_value = 'FILE_SCRIPT' if item.from_json else 'FILE_FOLDER'
@@ -23,8 +23,6 @@ class BlendFilePanel(Panel):
     bl_category = 'Look Assigner'
 
     def draw(self, context):
-
-        # prefs = context.preferences.addons["look_assigner"].preferences
 
         prefs = preferences.get(context)
         lookProps = context.scene.LookAssigner_Properties
@@ -49,16 +47,7 @@ class BlendFilePanel(Panel):
             col_flow.label(text='You can then choose to publish this scene as a')
             col_flow.label(text='blend file into a per asset, or global look task.')
 
-        # col_flow = box.column_flow(columns=1, align=True)
-        # col_flow.label(text='Run this operator in your 3d_look master file.')
-        # col_flow.label(text='It will create a new scene with all shaders inside.')
-        # col_flow.label(text='You can then choose to publish this scene as a')
-        # col_flow.label(text='blend file into a per asset or global look task.')
-
-
         box = layout.box()
-
-        print (f'BlendFilePanel DRAW {prefs.paths} {len(prefs.paths)}')
 
         if prefs.paths and len(prefs.paths) > 0:
 
@@ -119,8 +108,6 @@ class BlendFilePanel(Panel):
         # Optionally, add other UI elements below the list
         # layout.operator("object.look_assigner", text="Scan for Blend Files")
 
-
-
     def draw_header(self, context):
         layout = self.layout
         layout.label(text="", icon='FILE_BLEND')
@@ -146,8 +133,6 @@ class MaterialPanel(bpy.types.Panel):
         layout = self.layout
         lookProps = context.scene.LookAssigner_Properties
         prefs = preferences.get(context)
-
-        print (f'lookProps.blend_files - {lookProps.blend_files} selected_path_enum {lookProps.selected_path_enum}')
 
         # the material layout area
         box = layout.box()
@@ -219,10 +204,10 @@ class InvertCheckStateOperator(Operator):
 
     @classmethod
     def poll(cls, context):
-        return ("LookAssigner_Properties" in context.scene and "materials" in context.scene.LookAssigner_Properties.materials)
+        return ("LookAssigner_Properties" in context.scene and "materials" in context.scene.LookAssigner_Properties)
 
     def execute(self, context):
-        for material in context.scene.materials:
+        for material in context.scene.LookAssigner_Properties.materials:
             material.use = not material.use
         return {'FINISHED'}
 
@@ -232,10 +217,10 @@ class CheckAllMaterialsOperator(Operator):
 
     @classmethod
     def poll(cls, context):
-        return("LookAssigner_Properties" in context.scene and "materials" in context.scene.LookAssigner_Properties.materials)
+        return("LookAssigner_Properties" in context.scene and "materials" in context.scene.LookAssigner_Properties)
 
     def execute(self, context):
-        for material in context.scene.materials:
+        for material in context.scene.LookAssigner_Properties.materials:
             material.use = True
         return {'FINISHED'}
 
@@ -245,10 +230,10 @@ class UncheckAllMaterialsOperator(Operator):
 
     @classmethod
     def poll(cls, context):
-        return ("LookAssigner_Properties" in context.scene and "materials" in context.scene.LookAssigner_Properties.materials)
+        return ("LookAssigner_Properties" in context.scene and "materials" in context.scene.LookAssigner_Properties)
 
     def execute(self, context):
-        for material in context.scene.materials:
+        for material in context.scene.LookAssigner_Properties.materials:
             material.use = False
         return {'FINISHED'}
 
@@ -264,7 +249,7 @@ class BLEND_UL_file_list(UIList):
             layout.label(text="", icon='BLENDER')
 
 class_list = [
-    CustomPath_UL_List,
+    UI_UL_CustomPath_List,
     BlendFilePanel,
     MaterialPanel,
     InvertCheckStateOperator,
@@ -283,7 +268,7 @@ def unregister():
     for cls in class_list:
         bpy.utils.unregister_class(cls)
 
-    bpy.utils.unregister_class(CustomPath_UL_List)
+    bpy.utils.unregister_class(UI_UL_CustomPath_List)
     bpy.utils.unregister_class(BlendFilePanel)
     bpy.utils.unregister_class(MaterialPanel)
     bpy.utils.unregister_class(InvertCheckStateOperator)
