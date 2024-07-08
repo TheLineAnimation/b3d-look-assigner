@@ -16,7 +16,7 @@ class BlendFilePathItem(PropertyGroup):
         )
     file_path: StringProperty(
         name="File Path", 
-        subtype='FILE_PATH', 
+        subtype='DIR_PATH', 
         default=""
         )
     from_json: BoolProperty(
@@ -90,7 +90,7 @@ def get_ayon_project_path():
 
 def load_paths_from_json(prefs):
     """
-    
+
     """
 
     json_path = os.path.join(get_ayon_project_path(), "look_assigner_paths.json")

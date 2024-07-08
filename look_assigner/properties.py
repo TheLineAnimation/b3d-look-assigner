@@ -13,7 +13,7 @@ class ScanForBlendFilesOperator(Operator):
     
     def scan_for_blend_files(self, directory, context):
 
-        lookProps = context.scene.LookAssigner_Properties    
+        lookProps = context.scene.LookAssigner_Properties
         lookProps.blend_files.clear()
 
         for root, _, files in os.walk(directory):
