@@ -268,11 +268,4 @@ def unregister():
     for cls in class_list:
         bpy.utils.unregister_class(cls)
 
-    bpy.utils.unregister_class(UI_UL_CustomPath_List)
-    bpy.utils.unregister_class(BlendFilePanel)
-    bpy.utils.unregister_class(MaterialPanel)
-    bpy.utils.unregister_class(InvertCheckStateOperator)
-    bpy.utils.unregister_class(CheckAllMaterialsOperator)
-    bpy.utils.unregister_class(UncheckAllMaterialsOperator)
-    bpy.utils.unregister_class(BLEND_UL_file_list)
 
