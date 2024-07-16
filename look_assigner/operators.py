@@ -247,7 +247,7 @@ class LoadMaterialsOperator(Operator):
 
     @classmethod
     def poll(cls, context):
-        return "LookAssigner_Properties" in context.scene and "materials" in context.scene.LookAssigner_Properties
+        return "LookAssigner_Properties" in context.scene and "materials" in context.scene.LookAssigner_Properties and (len(context.scene.LookAssigner_Properties.materials) > 0)
 
     def execute(self, context):
         prefs = context.preferences.addons["look_assigner"].preferences

@@ -3,12 +3,24 @@ import sys
 import logging
 import os
 
+from pathlib import Path
+
 def ShowMessageBox(message = "", title = "Message Box", icon = 'INFO'):
 
     def draw(self, context):
         self.layout.label(text=message)
 
     bpy.context.window_manager.popup_menu(draw, title = title, icon = icon)
+
+def get_project_path():
+    open_pype_server_root = os.getenv("OPENPYPE_PROJECT_ROOT_WORK") 
+    open_pype_project = os.getenv("AVALON_PROJECT")
+    
+    if open_pype_server_root and open_pype_project:  
+        project_path = Path() / open_pype_server_root / open_pype_project
+        return str(project_path)
+    else:
+        return ""
 
 class LoggerFactory:
     """

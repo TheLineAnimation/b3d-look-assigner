@@ -13,12 +13,17 @@ Look Assigner
 
 A complete system for pipelining and loading Blender shaders
 
+v 1.4.0 Is the Production release version
+
 '''
+
+from .utils import LoggerFactory
+logger = LoggerFactory.get_logger()
 
 bl_info = {
     "name": "Look Assigner",
     "author": "Pete.Addington",
-    "version": (1, 3, 0),
+    "version": (1, 4, 0),
     "blender": (4, 1, 0),
     "location": "3d View > Look Assigner",
     "warning": "", # used for warning icon and text in addons panel
@@ -46,6 +51,9 @@ def register():
     operators.register()
     ui.register()
 
+    prefs = preferences.get(bpy.context)
+    prefs.update_logging_level()
+   
 def unregister():
     ui.unregister()
     operators.unregister()

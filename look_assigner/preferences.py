@@ -6,7 +6,8 @@ import os
 import json
 import logging
 
-from .utils import LoggerFactory
+from .utils import LoggerFactory, get_project_path
+
 logger = LoggerFactory.get_logger()
 
 class BlendFilePathItem(PropertyGroup):
@@ -23,12 +24,18 @@ class BlendFilePathItem(PropertyGroup):
         name="From JSON", 
         default=False
         )
+    recursive: BoolProperty(
+        name="Recursive", 
+        default=True
+        )
 
 class LookAssignerPreferences(AddonPreferences):
     bl_idname = "look_assigner"
 
     material_filter: StringProperty(name="Material Filter", default="")
     task_filter: StringProperty(name="Task Filter", default="3d_look")
+    # recursive_search : BoolProperty(name="Recursive Search", default=True)
+
     ignore_filter: StringProperty(
         name="Ignore Specific Names", 
         default="Dots Stroke", 
@@ -49,7 +56,7 @@ class LookAssignerPreferences(AddonPreferences):
     def update_logging_level(self):
         if self.debug_mode:
             LoggerFactory.set_level(logging.DEBUG)
-            logger.debug("Debug Logger Enabled")
+            logger.debug(f"Debug Logger Enabled [{logging.DEBUG}]")
         else:
             LoggerFactory.set_level(logging.INFO)
 
@@ -61,21 +68,39 @@ class LookAssignerPreferences(AddonPreferences):
         layout = self.layout
 
         row = layout.row()
-        row.label(text="Published Shader File Search Paths:" , icon="MATERIAL")
+        row.label(text="Shader File Search Paths:" , icon="MATERIAL")
+
+        row = layout.row()
+        split1 = row.split(factor=0.2)        
+        split1.label( text=" Folder Name")
+        split2 = split1.split(factor=(0.62 / 0.8)) 
+        split2.label(text="File Path")
+        split3 = split2.split(factor=0.8)
+        split3.label(text="Search All")
+        split3.label(text="")  
+
         row = layout.row()
         row.template_list("UI_UL_CustomPath_List", "", self, "paths", self, "path_index")  
+
+
         col = row.column(align=True)
         col.operator("wm.add_path_operator", icon='ADD', text="")
         col.operator("wm.remove_path_operator", icon='REMOVE', text="")
 
         row = layout.row()
+        row.label(text="Enable 'Search All' per path entry to include all nested folders in the search." , icon="INFO")
+
+        box = layout.box()
+        row = box.row()
         row.label(text="Search Filter Preferences:" , icon="QUESTION")
 
-        layout.prop(self, "material_filter", text="Material Filter")
-        layout.prop(self, "task_filter", text="Task Filter")
-        layout.prop(self, "ignore_filter", text="Ignore specific materials")
+        box.prop(self, "material_filter", text="Material Filter")
+        box.prop(self, "task_filter", text="Task Filter")
+        box.prop(self, "ignore_filter", text="Ignore specific materials")
 
-        layout.prop(self, "debug_mode", text="Enable Debugging Mode (Check system console for extra messages)")
+        # box.prop(self, "recursive_search", text="Recursive Search")
+
+        box.prop(self, "debug_mode", text="Enable Debugging Mode (Check system console for extra messages)")
 
 def get(context: bpy.types.Context) -> LookAssignerPreferences:
     """Return the add-on preferences."""
@@ -85,20 +110,19 @@ def get(context: bpy.types.Context) -> LookAssignerPreferences:
     ), "Expected LookAssignerPreferences, got %s instead" % (type(prefs))
     return prefs
 
-def get_ayon_project_path():
-    return "./"
-
 def load_paths_from_json(prefs):
     """
 
     """
-
-    json_path = os.path.join(get_ayon_project_path(), "look_assigner_paths.json")
+    template_subpath = "tools/pipeline/blender/_templates/look_assigner"
+    json_path = os.path.join(get_project_path(), template_subpath, "look_assigner_paths.json")  
     
     if not os.path.exists(json_path):
+        logger.info(f"I can't find a Look template in the current project directory - {json_path}")
         return
 
     with open(json_path, 'r') as file:
+        logger.info(f"Look template found in current project directory - {json_path}")
         data = json.load(file)
 
     existing_paths = {item.file_path for item in prefs.paths}
@@ -118,6 +142,8 @@ def load_paths_from_json(prefs):
             new_item.name = name
             new_item.file_path = value
             new_item.from_json = True
+            new_item.recursive = True
+
             logger.debug (f'Added path from JSON template {json_path} {name} {value}')
 
 class AddPathOperator(Operator):
@@ -128,8 +154,9 @@ class AddPathOperator(Operator):
         # prefs = context.preferences.addons["look_assigner"].preferences
         prefs = get(context)
         new_item = prefs.paths.add()
-        new_item.name = "Folder Name"
+        new_item.name = "Enter Folder Name"
         new_item.file_path = ""
+        new_item.recursive = True
         prefs.path_index = len(prefs.paths) - 1
         return {'FINISHED'}
 
@@ -152,6 +179,7 @@ def register():
     bpy.utils.register_class(RemovePathOperator)
 
     # Load paths from JSON on add-on registration
+    # this only happens on startup
     prefs = bpy.context.preferences.addons["look_assigner"].preferences
     load_paths_from_json(prefs)
 

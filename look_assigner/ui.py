@@ -9,10 +9,14 @@ logger = LoggerFactory.get_logger()
 
 class UI_UL_CustomPath_List(UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        split = layout.split(factor=0.25)
+
+        row = layout.row()
+        split1 = row.split(factor=0.2)
         icon_value = 'FILE_SCRIPT' if item.from_json else 'FILE_FOLDER'
-        split.prop(item, "name", text="", emboss=False, icon=icon_value)
-        split.prop(item, "file_path", text="")
+        split1.prop(item, "name", text="", emboss=False, icon=icon_value)
+        split2 = split1.split(factor=(0.7 / 0.8))  # Split the remaining 60%
+        split2.prop(item, "file_path", text="")
+        split2.split(factor=1.0).prop(item, "recursive", text="", expand=True)  # Take the remaining space
 
 class BlendFilePanel(Panel):
     bl_label = "Look Assigner" 
@@ -21,6 +25,10 @@ class BlendFilePanel(Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = 'Look Assigner'
+
+    @classmethod
+    def poll(cls, context):
+        return True
 
     def draw(self, context):
 
@@ -109,12 +117,14 @@ class BlendFilePanel(Panel):
         # layout.operator("object.look_assigner", text="Scan for Blend Files")
 
     def draw_header(self, context):
-        layout = self.layout
-        layout.label(text="", icon='FILE_BLEND')
 
-    @classmethod
-    def poll(cls, context):
-        return True
+        prefs = preferences.get(context)
+        layout = self.layout
+        header_text = "D E B U G   M O D E" if prefs.debug_mode else ""
+        layout.label(text=header_text, icon='FILE_BLEND')
+        if prefs.debug_mode:
+            layout.operator("object.open_addon_preferences", text="Preferences", icon="SETTINGS") 
+
 
 class MaterialPanel(bpy.types.Panel):
     bl_label = "Shader List"
@@ -122,8 +132,7 @@ class MaterialPanel(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = 'Look Assigner'
-
-            
+          
     def text_row(self, parent, text, icon, label, factor):
         split = parent.split(factor=factor)
         split.label(text=text , icon=icon)
@@ -248,6 +257,7 @@ class BLEND_UL_file_list(UIList):
             layout.alignment = 'CENTER'
             layout.label(text="", icon='BLENDER')
 
+
 class_list = [
     UI_UL_CustomPath_List,
     BlendFilePanel,
@@ -262,6 +272,8 @@ def register():
 
     for cls in class_list:
         bpy.utils.register_class(cls)
+
+    
 
 def unregister():
 

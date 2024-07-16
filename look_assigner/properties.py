@@ -5,21 +5,34 @@ from bpy.types import PropertyGroup, Operator
 from bpy.props import StringProperty, BoolProperty, CollectionProperty, IntProperty, EnumProperty, PointerProperty
 
 from .utils import LoggerFactory
+
+from . import preferences
+
+
 logger = LoggerFactory.get_logger()
 
 class ScanForBlendFilesOperator(Operator):
     bl_idname = "object.scan_for_blend_files"
     bl_label = "Scan for Blend Files"
     
-    def scan_for_blend_files(self, directory, context):
+    def scan_for_blend_files(self, context, directory, recursive ):
 
         lookProps = context.scene.LookAssigner_Properties
         lookProps.blend_files.clear()
 
-        for root, _, files in os.walk(directory):
-            for file in files:
-                if file.endswith(".blend"):
-                    logger.debug (f'ScanForBlendFilesOperator - File Found:{root} {file}')
+        if recursive:
+            for root, _, files in os.walk(directory):
+                for file in files:
+                    if file.endswith(".blend"):
+                        logger.debug(f'ScanForBlendFilesOperator - Recursive: On : File Found: {root} {file}')
+                        item = lookProps.blend_files.add()
+                        item.name = file
+                        item.path = os.path.join(root, file)
+        else:
+            root = directory
+            for file in os.listdir(directory):
+                if os.path.isfile(os.path.join(root, file)) and file.endswith(".blend"):
+                    logger.debug(f'ScanForBlendFilesOperator - Recursive: Off : File Found: {root} {file}')
                     item = lookProps.blend_files.add()
                     item.name = file
                     item.path = os.path.join(root, file)
@@ -28,13 +41,17 @@ class ScanForBlendFilesOperator(Operator):
         lookProps.materials.clear()    
 
     def execute(self, context):
-        preferences = context.preferences.addons["look_assigner"].preferences
+        prefs = preferences.get(context)
         lookProps = context.scene.LookAssigner_Properties    
         selected_path_index = int(lookProps.selected_path_enum)
 
-        if selected_path_index < len(preferences.paths):
-            selected_path = preferences.paths[selected_path_index].file_path
-            self.scan_for_blend_files(selected_path, context)
+        if selected_path_index < len(prefs.paths):
+            current_item = prefs.paths[selected_path_index]
+
+            if current_item:
+                selected_path = current_item.file_path
+                search_params = current_item.recursive
+                self.scan_for_blend_files(context, selected_path, search_params )
         return {'FINISHED'}
 
 
@@ -42,7 +59,7 @@ def update_path_enum(self, context):
     bpy.ops.object.scan_for_blend_files()
 
 def update_materials( self, context):
-    prefs = context.preferences.addons["look_assigner"].preferences
+    prefs = preferences.get(context)
     lookProps = context.scene.LookAssigner_Properties
 
     lookProps.materials_filtered = 0 
@@ -81,7 +98,7 @@ def get_materials_from_blend( filepath ):
                 material_names.append(mat_name)
     return material_names
 
-
+# This blend file item is for the Custom UI panel in the main UI
 class BlendFileItem(PropertyGroup):
     name: StringProperty(name="File Name",default="")
     path: StringProperty(name="File Path",default="")
